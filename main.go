@@ -1,9 +1,12 @@
 package main
 
 import (
-	"net/http"
+	AuthController "golang/jwt-api/Controller/auth"
+	"golang/jwt-api/orm"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // binding from json
@@ -14,19 +17,21 @@ type Register struct {
 	Lname    string `json:"lname" binding:"required"`
 	// Avatar   string `json:"avatar"`
 }
+type Users struct {
+	gorm.Model
+	Username string
+	Password string
+	Fname    string
+	Lname    string
+}
 
 func main() {
-	r := gin.Default()
-	r.POST("/register", func(c *gin.Context) {
-		var json Register
-		if err := c.ShouldBindJSON(&json); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
+	orm.InitDB()
 
-		c.JSON(200, gin.H{
-			"message": json,
-		})
-	})
-	r.Run("localhost:8282")
+	// Migrate the schema
+	r := gin.Default()
+	r.Use(cors.Default())
+	r.POST("/register", AuthController.Register)
+	r.POST("/login", AuthController.Login)
+	r.Run("localhost:8787")
 }
